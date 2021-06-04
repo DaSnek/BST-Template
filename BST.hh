@@ -2,14 +2,15 @@
 #define __BST_HH__
 
 #include <iostream>
+#include <assert.h>
 
 template <typename T>
 class Node {
 public:
 	T data;
-	Node* parent;
-	Node* left;
-	Node* right;
+	Node<T>* parent;
+	Node<T>* left;
+	Node<T>* right;
 
 	Node() = delete;
 
@@ -29,22 +30,96 @@ private:
 
 		delete_tree(n->left);
 		delete_tree(n->right);
+		
 		std::cout << "delete " << n->data << std::endl;
 		delete n;
+		size--;
 	}
 
-	Node<T>* find_smaller_node(const Node<T>* n) const {
+	Node<T>* find_smaller_node(Node<T>* n) const {
+		assert(n);
 
+		Node<T>* n1 = n;
+
+		if (!n->left) {
+//			std::cout << n1->data << std::endl;
+
+			while (n1 && (n1->data >= n->data)) {
+//				std::cout << n1->data << std::endl;
+				n1 = n1->parent;
+			}
+		} else {
+			n1 = n->left;
+//			std::cout << n1->data <<std::endl;
+		
+			while (n1->right) {
+//				std::cout << n1->data << std::endl;
+				n1 = n1->right;
+			}
+		}		
+		return n1;
 	}
+		
+	Node<T>* find_larger_node(Node<T>* n) const {
+		assert(n);
 
-	Node<T>* find_smaller_node(const T& d) const {
+		Node<T>* n1 = n;
 
+		if (!n->right) {
+//			std::cout << n1->data << std::endl;
+
+			while (n1 && (n1->data <= n->data)) {
+//				std::cout << n1->data << std::endl;
+				n1 = n1->parent;
+			}
+		} else {
+			n1 = n->right;
+//			std::cout << n1->data <<std::endl;
+		
+			while (n1->left) {
+//				std::cout << n1->data << std::endl;
+				n1 = n1->left;
+			}
+		}		
+		return n1;
 	}
-
-	//find_larger_node() {/*todo*/}
 
 public:
 	BST() : size{0}, root{nullptr} {}
+
+	//returns NULL if not found
+	Node<T>* find(T d) const {
+		Node<T>* n = root;
+		
+		while (n && n->data != d) {
+			if (n->data < d) 
+				n = n->right;
+			else 
+				n = n->left;
+		}
+
+		return n;
+	}
+
+	const Node<T>* find_smaller_node(const T& d) const {
+		Node<T>* n = find(d);
+	
+		if (!n)	{
+			return nullptr;
+		}
+		
+		return find_smaller_node(n);
+	}
+
+	const Node<T>* find_larger_node(const T& d) const {
+		Node<T>* n = find(d);
+	
+		if (!n)	{
+			return nullptr;
+		}
+		
+		return find_larger_node(n);
+	}
 
 	int get_size() const {
 		return size;
