@@ -2,6 +2,7 @@
 #define __BST_HH__
 
 #include <iostream>
+#include <stdio.h>
 #include <assert.h>
 
 template <typename T>
@@ -15,6 +16,10 @@ public:
 	Node() = delete;
 
 	Node(const T& d) : data{d}, parent{nullptr}, left{nullptr}, right{nullptr} {} 
+
+	virtual ~Node() {
+		std::cout << "Node " << data << " deleted\n";
+	}
 };
 
 template <typename T>
@@ -84,11 +89,69 @@ private:
 		return n1;
 	}
 
+	bool delete_node(Node<T>* n) {
+		if (!n) {
+			return false;
+		}
+		
+		Node<T>* t = n;
+
+		if (!n->left && !n->right) {
+			t = n->parent;
+			if (!t) {
+				delete n;
+				root = nullptr;
+				size = 0;
+				return true;
+			}
+
+			if (t->left == n)
+				t->left = nullptr;
+			else 
+				t->right = nullptr;
+
+			n->parent = NULL;
+			delete n;
+			
+			size--;
+			return true;
+		}
+
+		if (!n->left ^ !n->right) { 
+			t = n->right ? n->right : n->left;
+			t->parent = n->parent;
+			if (!n->parent) {
+				root = t;
+				delete n;
+				size--;
+				return true;
+			}				
+
+			if (n == n->parent->left) 
+				 n->parent->left = t;
+			else 
+				 n->parent->right = t;
+
+			delete n;
+			size--;
+
+			return true;
+		}
+
+		t = find_larger_node(n);
+
+		T temp = n->data;
+		n->data = t->data;
+		t->data = temp;
+
+		return delete_node(t);
+	}		
+
 public:
 	BST() : size{0}, root{nullptr} {}
 
 	//returns NULL if not found
-	Node<T>* find(T d) const {
+	Node<T>* find(const T& d) const {
 		Node<T>* n = root;
 		
 		while (n && n->data != d) {
@@ -138,6 +201,7 @@ public:
 	}
 
 	void dump_all_data() const {
+		std::cout << "[" << size << "]: ";
 		dump_subtree_data(root);
 		return;
 	}
@@ -177,6 +241,15 @@ public:
 		size++;	 
 
 		return true;
+	}
+
+	bool delete_node(const T& d) {
+		Node<T>* n = find(d);
+
+		if (!n) 
+			return false;
+
+		return delete_node(n);
 	}
 
 	virtual ~BST() {
